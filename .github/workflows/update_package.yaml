@@ -1,0 +1,52 @@
+name: Update package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: apify-cli version (default is the latest release on npm)
+        required: false
+        type: string
+  schedule:
+    - cron: '0 6 * * *'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    concurrency: update-package
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+
+      - name: Update apify-cli
+        env:
+          VERSION: ${{ inputs.version }}
+        run: nix develop -c scripts/update.sh "$VERSION"
+
+      # A PR opened with GITHUB_TOKEN would not start the CI workflow.
+      - name: Open PR and enable auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
+        run: |
+          set -o errexit
+          git diff --quiet && exit 0
+
+          version=$(sed -n 's/^  version = "\(.*\)";$/\1/p' pkgs/apify-cli/package.nix)
+          branch="update-apify-cli-$version"
+          # Merging deletes the branch. A branch left from an earlier run means its PR is stuck.
+          if git ls-remote --exit-code origin "$branch" > /dev/null; then
+            echo "::error::The PR from $branch has not merged"
+            exit 1
+          fi
+
+          git config user.name 'Apify Service Account'
+          git config user.email '64261774+apify-service-account@users.noreply.github.com'
+          git checkout -b "$branch"
+          git add pkgs/apify-cli
+          git commit -m "Update apify-cli to $version"
+          git push origin "$branch"
+
+          gh pr create --fill
+          gh pr merge --auto --squash --delete-branch
