@@ -1,0 +1,43 @@
+{
+  "name": "@apify/mcpc",
+  "version": "0.7.0",
+  "description": "Universal command-line client for the Model Context Protocol (MCP).",
+  "type": "module",
+  "keywords": [
+    "Model Context Protocol",
+    "MCP",
+    "CLI",
+    "Code mode",
+    "LLM",
+    "AI"
+  ],
+  "license": "Apache-2.0",
+  "author": "Jan Curn (@jancurn)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apify/mcpc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/apify/mcpc/issues"
+  },
+  "homepage": "https://github.com/apify/mcpc",
+  "bin": {
+    "mcpc": "bin/mcpc",
+    "mcpc-bridge": "bin/mcpc-bridge"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "2.0.0",
+    "@modelcontextprotocol/core": "2.0.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@napi-rs/keyring": "^2.0.0",
+    "chalk": "^6.0.0",
+    "commander": "^15.0.0",
+    "ora": "^9.4.1",
+    "proper-lockfile": "^4.1.2",
+    "qrcode-terminal": "^0.12.0",
+    "undici": "^7.29.1"
+  }
+}

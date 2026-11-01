@@ -1,12 +1,22 @@
 #!/usr/bin/env bash
-# Usage: scripts/update.sh [version]
-# Updates pkgs/apify-cli to the given npm version (default: the latest release on npm).
+# Usage: scripts/update.sh <package> [version]
+# Updates pkgs/<package> to the given npm version (default: the latest release on npm).
 # Needs nix, npm, jq, curl and prefetch-npm-deps; `nix develop` provides them.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-pkg=pkgs/apify-cli
-version=${1:-$(npm view apify-cli version)}
+name=${1:?Usage: scripts/update.sh <package> [version]}
+case $name in
+  apify-cli) npm_name=apify-cli ;;
+  mcpc) npm_name=@apify/mcpc ;;
+  *)
+    echo "Unknown package: $name" >&2
+    exit 1
+    ;;
+esac
+
+pkg=pkgs/$name
+version=${2:-$(npm view "$npm_name" version)}
 if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   echo "Not a release version: $version" >&2
   exit 1
@@ -14,14 +24,14 @@ fi
 
 current=$(sed -n 's/^  version = "\(.*\)";$/\1/p' "$pkg/package.nix")
 if [[ $version == "$current" ]]; then
-  echo "apify-cli is already at $version"
+  echo "$name is already at $version"
   exit 0
 fi
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
-url="https://registry.npmjs.org/apify-cli/-/apify-cli-$version.tgz"
+url=$(npm view "$npm_name@$version" dist.tarball)
 curl -fsSL "$url" | tar xz -C "$work"
 
 jq 'del(.devDependencies, .devEngines, .scripts)' "$work/package/package.json" > "$pkg/package.json"
@@ -38,5 +48,5 @@ sed -i \
   -e "s|npmDepsHash = \".*\";|npmDepsHash = \"$deps_hash\";|" \
   "$pkg/package.nix"
 
-nix build ".#apify-cli" --no-link -L
-echo "Updated apify-cli from $current to $version"
+nix build ".#$name" --no-link -L
+echo "Updated $name from $current to $version"
