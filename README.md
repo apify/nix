@@ -1,16 +1,20 @@
 # Apify Nix packages
 
-Nix packages for Apify tools. The repo has one package so far: the [Apify CLI](https://docs.apify.com/cli) (`apify-cli`).
+Nix packages for Apify tools:
+
+- `apify-cli`: the [Apify CLI](https://docs.apify.com/cli)
+- `mcpc`: [mcpc](https://github.com/apify/mcpc), a command-line client for MCP servers
 
 Supported systems: `x86_64-linux`, `aarch64-linux` and `aarch64-darwin`.
 
-## Run the CLI once
+## Run a tool once
 
 ```sh
 nix run github:apify/nix#apify-cli -- --help
+nix run github:apify/nix#mcpc -- --help
 ```
 
-## Add the CLI to your configuration
+## Add the tools to your configuration
 
 Add this repo as a flake input:
 
@@ -21,7 +25,7 @@ Add this repo as a flake input:
 }
 ```
 
-Then add the package to NixOS, nix-darwin or home-manager:
+Then add the packages to NixOS, nix-darwin or home-manager:
 
 ```nix
 # NixOS or nix-darwin
@@ -31,7 +35,7 @@ environment.systemPackages = [ inputs.apify.packages.${pkgs.stdenv.hostPlatform.
 home.packages = [ inputs.apify.packages.${pkgs.stdenv.hostPlatform.system}.apify-cli ];
 ```
 
-You can also use the overlay, which adds `pkgs.apify-cli`:
+You can also use the overlay, which adds `pkgs.apify-cli` and `pkgs.mcpc`:
 
 ```nix
 nixpkgs.overlays = [ inputs.apify.overlays.default ];
@@ -42,8 +46,8 @@ environment.systemPackages = [ pkgs.apify-cli ];
 
 Update the CLI by updating the flake input, not with `apify upgrade`. The package turns off the CLI's update notice because the notice tells users to update with npm.
 
-A workflow checks npm for new CLI releases every day and opens a PR. The PR merges after CI builds and tests the package on all supported systems. To update by hand:
+A workflow checks npm for new releases every day and opens a PR. The PR merges after CI builds and tests the package on all supported systems. To update by hand:
 
 ```sh
-nix develop -c scripts/update.sh [version]
+nix develop -c scripts/update.sh <package> [version]
 ```
