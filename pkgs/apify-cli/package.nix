@@ -70,6 +70,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
         --add-flags $out/lib/apify-cli/dist/$bin.js \
         --set-default APIFY_CLI_SKIP_UPDATE_CHECK 1
     done
+    ln -s apify $out/bin/apify-cli
     runHook postInstall
   '';
 
