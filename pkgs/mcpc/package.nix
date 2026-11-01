@@ -25,11 +25,6 @@ buildNpmPackage (finalAttrs: {
 
   dontNpmBuild = true;
 
-  # mcpc starts its bridge with `node dist/bridge/index.js`, never as `mcpc-bridge`.
-  postInstall = ''
-    rm $out/bin/mcpc-bridge
-  '';
-
   doInstallCheck = true;
   nativeInstallCheckInputs = [ versionCheckHook ];
   versionCheckProgramArg = "--version";

@@ -5,17 +5,13 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-name=${1:?Usage: scripts/update.sh <package> [version]}
-case $name in
-  apify-cli) npm_name=apify-cli ;;
-  mcpc) npm_name=@apify/mcpc ;;
-  *)
-    echo "Unknown package: $name" >&2
-    exit 1
-    ;;
-esac
-
+name=${1:-}
 pkg=pkgs/$name
+if [[ -z $name || ! -f $pkg/package.nix ]]; then
+  echo "Usage: scripts/update.sh <package> [version], where <package> is a folder in pkgs/" >&2
+  exit 1
+fi
+npm_name=$(jq -r .name "$pkg/package.json")
 version=${2:-$(npm view "$npm_name" version)}
 if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   echo "Not a release version: $version" >&2
