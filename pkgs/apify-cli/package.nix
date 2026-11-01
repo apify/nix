@@ -63,6 +63,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     runHook preInstall
     rm -rf node_modules
     pnpm install --offline --prod --ignore-scripts --frozen-lockfile --filter=apify-cli
+    # These pnpm state files contain timestamps and break reproducibility.
+    rm node_modules/.modules.yaml node_modules/.pnpm-workspace-state-v1.json
     mkdir -p $out/lib/apify-cli $out/bin
     cp -r dist skills node_modules package.json $out/lib/apify-cli/
     for bin in apify actor; do
