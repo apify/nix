@@ -1,39 +1,76 @@
 {
   lib,
-  buildNpmPackage,
-  fetchurl,
+  stdenvNoCC,
+  fetchFromGitHub,
   nodejs,
+  pnpm_12,
+  fetchPnpmDeps,
+  pnpmConfigHook,
   makeWrapper,
   versionCheckHook,
+  nix-update-script,
 }:
 
-buildNpmPackage (finalAttrs: {
+stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "apify-cli";
   version = "1.11.0";
 
-  # The npm release already contains the built CLI, with its version and commit filled in.
-  src = fetchurl {
-    url = "https://registry.npmjs.org/apify-cli/-/apify-cli-${finalAttrs.version}.tgz";
-    hash = "sha256-vbKt/DdK64duDRg8bE+0l1aRt5Wm4otXWKvyJ30Vu3A=";
+  src = fetchFromGitHub {
+    owner = "apify";
+    repo = "apify-cli";
+    tag = "v${finalAttrs.version}";
+    hash = "sha256-SdJxFprsCh1c0B3iYnA2msVv2ejrS4vGeQvAyNLAe1s=";
   };
 
-  # The npm release has no lockfile. scripts/update.sh generates both files.
+  # The workspace also has the docs website, which the CLI does not need.
+  pnpmWorkspaces = [ "apify-cli" ];
+  pnpmDeps = fetchPnpmDeps {
+    inherit (finalAttrs)
+      pname
+      version
+      src
+      pnpmWorkspaces
+      ;
+    pnpm = pnpm_12;
+    fetcherVersion = 5;
+    hash = "sha256-s3fMSCh80qXKhSrCLA2cumKReybeG8G6dEzVLgufqVI=";
+  };
+
+  nativeBuildInputs = [
+    nodejs
+    pnpm_12
+    pnpmConfigHook
+    makeWrapper
+  ];
+
+  # Upstream fills these in with `git rev-parse`, which needs the git history.
   postPatch = ''
-    cp ${./package.json} package.json
-    cp ${./package-lock.json} package-lock.json
+    substituteInPlace src/lib/hooks/useCLIMetadata.ts \
+      --replace-fail ' = DEVELOPMENT_VERSION_MARKER;' ' = "${finalAttrs.version}";' \
+      --replace-fail ' = DEVELOPMENT_HASH_MARKER;' ' = "v${finalAttrs.version}";'
   '';
 
-  npmDepsHash = "sha256-loTrsZwFVlpts0UL36IaxPsP44givbkYKDfWQQnlJhc=";
+  buildPhase = ''
+    runHook preBuild
+    pnpm exec tsc
+    pnpm exec tsdown
+    runHook postBuild
+  '';
 
-  dontNpmBuild = true;
-
-  nativeBuildInputs = [ makeWrapper ];
-
+  # `pnpm prune --prod` tries to reach the network, so reinstall only the runtime dependencies.
   # The CLI's update notice tells users to update with npm.
-  postInstall = ''
-    for bin in apify apify-cli actor; do
-      wrapProgram $out/bin/$bin --set-default APIFY_CLI_SKIP_UPDATE_CHECK 1
+  installPhase = ''
+    runHook preInstall
+    rm -rf node_modules
+    pnpm install --offline --prod --ignore-scripts --frozen-lockfile --filter=apify-cli
+    mkdir -p $out/lib/apify-cli $out/bin
+    cp -r dist skills node_modules package.json $out/lib/apify-cli/
+    for bin in apify actor; do
+      makeWrapper ${lib.getExe nodejs} $out/bin/$bin \
+        --add-flags $out/lib/apify-cli/dist/$bin.js \
+        --set-default APIFY_CLI_SKIP_UPDATE_CHECK 1
     done
+    runHook postInstall
   '';
 
   doInstallCheck = true;
@@ -44,8 +81,10 @@ buildNpmPackage (finalAttrs: {
   postInstallCheck = ''
     export HOME=$(mktemp -d) APIFY_CLI_DISABLE_TELEMETRY=1
     (cd $HOME && $out/bin/apify init -y testing-actor && test -f .actor/actor.json)
-    (cd $out/lib/node_modules/apify-cli && ${lib.getExe nodejs} -e "require('@napi-rs/keyring')")
+    (cd $out/lib/apify-cli && ${lib.getExe nodejs} -e "require('@napi-rs/keyring')")
   '';
+
+  passthru.updateScript = nix-update-script { };
 
   meta = {
     description = "Command-line interface for the Apify platform";

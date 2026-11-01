@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: apify-cli version (default is the latest release on npm)
+        description: apify-cli version (default is the latest GitHub release)
         required: false
         type: string
   schedule:
@@ -23,7 +23,7 @@ jobs:
       - name: Update apify-cli
         env:
           VERSION: ${{ inputs.version }}
-        run: nix develop -c scripts/update.sh "$VERSION"
+        run: nix run nixpkgs#nix-update -- --flake apify-cli ${VERSION:+--version "$VERSION"} --build
 
       # A PR opened with GITHUB_TOKEN would not start the CI workflow.
       - name: Open PR and enable auto-merge

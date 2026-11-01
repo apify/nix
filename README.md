@@ -42,8 +42,8 @@ environment.systemPackages = [ pkgs.apify-cli ];
 
 Update the CLI by updating the flake input, not with `apify upgrade`. The package turns off the CLI's update notice because the notice tells users to update with npm.
 
-A workflow checks npm for new CLI releases every day and opens a PR. The PR merges after CI builds and tests the package on all supported systems. To update by hand:
+A workflow checks for new CLI releases every day and opens a PR. The PR merges after CI builds and tests the package on all supported systems. To update by hand:
 
 ```sh
-nix develop -c scripts/update.sh [version]
+nix run nixpkgs#nix-update -- --flake apify-cli [--version <version>]
 ```

@@ -26,16 +26,5 @@
       checks = forAllSystems (pkgs: {
         inherit (self.packages.${pkgs.stdenv.hostPlatform.system}) apify-cli;
       });
-
-      devShells = forAllSystems (pkgs: {
-        default = pkgs.mkShell {
-          packages = with pkgs; [
-            nodejs
-            jq
-            curl
-            prefetch-npm-deps
-          ];
-        };
-      });
     };
 }
