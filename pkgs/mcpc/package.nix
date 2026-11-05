@@ -8,11 +8,11 @@
 
 buildNpmPackage (finalAttrs: {
   pname = "mcpc";
-  version = "0.7.0";
+  version = "0.8.0";
 
   src = fetchurl {
     url = "https://registry.npmjs.org/@apify/mcpc/-/mcpc-${finalAttrs.version}.tgz";
-    hash = "sha256-9ame32MwiUdOPKHb2SjFYOrGPx6KX/LW8Ei5LQzU2ow=";
+    hash = "sha256-WTOHowJjUe4eUp+yEXQHaAKe/Mz+9uYvnLbRwgt4lH4=";
   };
 
   # The npm release has no lockfile. scripts/update.sh generates both files.
@@ -21,7 +21,7 @@ buildNpmPackage (finalAttrs: {
     cp ${./package-lock.json} package-lock.json
   '';
 
-  npmDepsHash = "sha256-UaEewfK3ZwWZEiEptVcuhuj0LB1neJiz6mC2oL/3u2U=";
+  npmDepsHash = "sha256-vREr3m0hF2PPefzWvZ/y450AzyRYj+Hjx6Y6qU7yVso=";
 
   dontNpmBuild = true;
 
