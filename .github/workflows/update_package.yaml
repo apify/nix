@@ -23,6 +23,7 @@ jobs:
         # Scheduled runs have no inputs and update every package.
         package: ${{ fromJSON(inputs.package && format('["{0}"]', inputs.package) || '["apify-cli", "mcpc"]') }}
     runs-on: ubuntu-latest
+    environment: automation
     concurrency: update-${{ matrix.package }}
     permissions:
       contents: write
