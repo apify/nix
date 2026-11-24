@@ -9,12 +9,12 @@
 
 buildNpmPackage (finalAttrs: {
   pname = "apify-cli";
-  version = "1.13.0";
+  version = "1.14.0";
 
   # The npm release already contains the built CLI, with its version and commit filled in.
   src = fetchurl {
     url = "https://registry.npmjs.org/apify-cli/-/apify-cli-${finalAttrs.version}.tgz";
-    hash = "sha256-KwWh4+xDrZysl7L5AioLdKkEjA9BUMpb7MSNxcxHuJI=";
+    hash = "sha256-6l6PF/viq1BFW/7cLbTkkKzG376oGGGo1spFO8fiELY=";
   };
 
   # The npm release has no lockfile. scripts/update.sh generates both files.
@@ -23,7 +23,7 @@ buildNpmPackage (finalAttrs: {
     cp ${./package-lock.json} package-lock.json
   '';
 
-  npmDepsHash = "sha256-o0CbvO57FWTDYhXfkIikdq//2CdHPiZMupW+B6ZJtjg=";
+  npmDepsHash = "sha256-WdGJxGIKwDU9upRblsTdzmmkQm+7wrVnygDN2JIVygk=";
 
   dontNpmBuild = true;
 
